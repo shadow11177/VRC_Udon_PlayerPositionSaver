@@ -12,7 +12,7 @@ public class PlayerPositionSaver : UdonSharpBehaviour
     [Header("How many minutes the position gets remembered from the last time they left until they spawn at spawn again (0 = infinite).", order = 2)]
     public int RememberTime = 120;
 
-
+    private bool Loaded = false;
     private float _elapsedTime = 0.0f;
     private VRCPlayerApi MyPlayer; //More efficient then getting the LocalPlayer each time
 
@@ -23,23 +23,27 @@ public class PlayerPositionSaver : UdonSharpBehaviour
 
     private void Update()
     {
-        _elapsedTime += Time.deltaTime;
-        //Has the given interval time been passed?
-        if (_elapsedTime >= TimeBetweenSaves)
+        if (Loaded)
         {
-            UpdatePlayerData();
-            _elapsedTime = 0.0f;
+            _elapsedTime += Time.deltaTime;
+            //Has the given interval time been passed?
+            if (_elapsedTime >= TimeBetweenSaves)
+            {
+                UpdatePlayerData();
+                _elapsedTime = 0.0f;
+            }
         }
     }
 
     private void UpdatePlayerData()
     {
         //Runs for each player them self
-        if(MyPlayer != null && MyPlayer.IsValid())
+        if (MyPlayer != null && MyPlayer.IsValid())
         {
             PlayerData.SetQuaternion("Rotation", MyPlayer.GetRotation());
             PlayerData.SetVector3("Position", MyPlayer.GetPosition());
             PlayerData.SetLong("LastTime", DateTime.Now.Ticks);
+            Debug.Log("Player Position Updated.");
         }
     }
     
@@ -50,6 +54,7 @@ public class PlayerPositionSaver : UdonSharpBehaviour
             if (PlayerData.HasKey(Player, "LastTime"))
             { //does the time matter? 
                 TimeSpan elapsedSpan = new TimeSpan(DateTime.Now.Ticks - PlayerData.GetLong(Player, "LastTime"));
+                Debug.Log("Elapsed time = " + elapsedSpan.Minutes.ToString() + " max Time: " + RememberTime.ToString());
                 if (elapsedSpan.Minutes < RememberTime || RememberTime == 0)
                 {  //put them where they were
                     Player.TeleportTo(PlayerData.GetVector3(Player, "Position"), PlayerData.GetQuaternion(Player, "Rotation"));
@@ -57,5 +62,6 @@ public class PlayerPositionSaver : UdonSharpBehaviour
             
             }
         }
+        Loaded = true; //Start updating after we are done loadig
     }
 }
