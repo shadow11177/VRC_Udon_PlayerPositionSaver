@@ -12,7 +12,6 @@ public class PlayerPositionSaver : UdonSharpBehaviour
     [Header("How many minutes the position gets remembered from the last time they left until they spawn at spawn again (0 = infinite).", order = 2)]
     public int RememberTime = 120;
 
-    private bool Loaded = false;
     private float _elapsedTime = 0.0f;
     private VRCPlayerApi MyPlayer; //More efficient then getting the LocalPlayer each time
 
@@ -22,17 +21,15 @@ public class PlayerPositionSaver : UdonSharpBehaviour
     }
 
     private void Update()
-    {
-        if (Loaded)
+{
+        _elapsedTime += Time.deltaTime;
+        //Has the given interval time been passed?
+        if (_elapsedTime >= TimeBetweenSaves)
         {
-            _elapsedTime += Time.deltaTime;
-            //Has the given interval time been passed?
-            if (_elapsedTime >= TimeBetweenSaves)
-            {
-                UpdatePlayerData();
-                _elapsedTime = 0.0f;
-            }
+            UpdatePlayerData();
+            _elapsedTime = 0.0f;
         }
+
     }
 
     private void UpdatePlayerData()
@@ -54,7 +51,8 @@ public class PlayerPositionSaver : UdonSharpBehaviour
             if (PlayerData.HasKey(Player, "LastTime"))
             { //does the time matter? 
                 TimeSpan elapsedSpan = new TimeSpan(DateTime.Now.Ticks - PlayerData.GetLong(Player, "LastTime"));
-                Debug.Log("Elapsed time = " + elapsedSpan.Minutes.ToString() + " max Time: " + RememberTime.ToString());
+                // total is all of them minutes only goes to 59
+                Debug.Log("Elapsed time = " + elapsedSpan.TotalMinutes.ToString() + " max Time: " + RememberTime.ToString());
                 if (elapsedSpan.Minutes < RememberTime || RememberTime == 0)
                 {  //put them where they were
                     Player.TeleportTo(PlayerData.GetVector3(Player, "Position"), PlayerData.GetQuaternion(Player, "Rotation"));
@@ -62,6 +60,5 @@ public class PlayerPositionSaver : UdonSharpBehaviour
             
             }
         }
-        Loaded = true; //Start updating after we are done loadig
     }
 }
