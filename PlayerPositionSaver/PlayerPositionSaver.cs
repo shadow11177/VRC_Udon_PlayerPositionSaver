@@ -53,11 +53,10 @@ public class PlayerPositionSaver : UdonSharpBehaviour
                 TimeSpan elapsedSpan = new TimeSpan(DateTime.Now.Ticks - PlayerData.GetLong(Player, "LastTime"));
                 // total is all of them minutes only goes to 59
                 Debug.Log("Elapsed time = " + elapsedSpan.TotalMinutes.ToString() + " max Time: " + RememberTime.ToString());
-                if (elapsedSpan.Minutes < RememberTime || RememberTime == 0)
+                if (elapsedSpan.TotalMinutes < RememberTime || RememberTime == 0)
                 {  //put them where they were
                     Player.TeleportTo(PlayerData.GetVector3(Player, "Position"), PlayerData.GetQuaternion(Player, "Rotation"));
                 }
-            
             }
         }
     }
